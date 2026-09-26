@@ -1,22 +1,55 @@
-app.jsfunction generatePalette() {
-  const palette = document.getElementById('palette');
-  palette.innerHTML = '';
+const palette = document.querySelector("#palette");
+const status = document.querySelector("#status");
+const values = [];
 
-  for (let i = 0; i < 5; i++) {
-    const color = `#${Math.floor(Math.random()*16777215).toString(16).padStart(6, '0')}`;
-    const colorBox = document.createElement('div');
-    colorBox.className = 'color-box';
-    colorBox.style.backgroundColor = color;
-    colorBox.title = color;
+function randomColour() {
+  return "#" + Math.floor(Math.random() * 16777215).toString(16).padStart(6, "0");
+}
 
-    colorBox.addEventListener('click', () => {
-      navigator.clipboard.writeText(color);
-      alert(`Copied ${color} to clipboard! 🎯`);
-    });
+function setStatus(message) {
+  status.textContent = message;
+}
 
-    palette.appendChild(colorBox);
+function render() {
+  palette.replaceChildren();
+  values.length = 0;
+
+  for (let i = 0; i < 5; i += 1) {
+    const colour = randomColour();
+    values.push(colour);
+
+    const item = document.createElement("button");
+    item.type = "button";
+    item.className = "colour-swatch";
+    item.style.setProperty("--swatch", colour);
+    item.dataset.colour = colour;
+    item.textContent = colour;
+    item.setAttribute("aria-label", "Copy " + colour);
+    palette.append(item);
   }
 }
 
-// Generate first palette on load
-window.onload = generatePalette;
+async function copy(text) {
+  try {
+    await navigator.clipboard.writeText(text);
+    setStatus("Copied " + text + " to the clipboard.");
+  } catch {
+    setStatus("Clipboard access was unavailable. Select the value manually: " + text);
+  }
+}
+
+document.querySelector("#generate").addEventListener("click", () => {
+  render();
+  setStatus("Generated a new palette.");
+});
+
+document.querySelector("#copy-all").addEventListener("click", () => {
+  copy(values.join(", "));
+});
+
+palette.addEventListener("click", (event) => {
+  const colour = event.target.dataset.colour;
+  if (colour) copy(colour);
+});
+
+render();
